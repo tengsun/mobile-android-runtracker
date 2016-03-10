@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">RunTracker</string>
+    <string name="tracker_started">Started:</string>
+    <string name="tracker_lat">Latitude:</string>
+    <string name="tracker_lng">Longitude:</string>
+    <string name="tracker_alt">Altitude:</string>
+    <string name="tracker_elapsed_time">Elapsed Time:</string>
+    <string name="tracker_start">Start</string>
+    <string name="tracker_stop">Stop</string>
+    <string name="tracker_gps_enabled">GPS Enabled</string>
+    <string name="tracker_gps_disabled">GPS Disabled</string>
+    <string name="tracker_cell_text">Run at %1$s</string>
+</resources>
