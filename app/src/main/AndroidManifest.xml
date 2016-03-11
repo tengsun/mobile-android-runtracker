@@ -2,6 +2,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="st.runtracker">
 
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-feature android:required="true" android:name="android.hardware.location.gps" />
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -11,10 +14,15 @@
         <activity android:name=".RunActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <receiver android:name=".location.LocationReceiver" android:exported="false">
+            <intent-filter>
+                <action android:name="st.runtracker.ACTION_LOCATION" />
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>
