@@ -4,6 +4,7 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.location.Location;
 import android.location.LocationManager;
 import android.util.Log;
 import android.widget.Toast;
@@ -40,9 +41,16 @@ public class RunManager {
 
     public void startLocationUpdates() {
         String provider = LocationManager.GPS_PROVIDER;
-        PendingIntent pi = getLocationPendingIntent(true);
+
+        // get last known location and boradcast it
+        Location lastKnown = locationManager.getLastKnownLocation(provider);
+        if (lastKnown != null) {
+            lastKnown.setTime(System.currentTimeMillis());
+            broadcastLocation(lastKnown);
+        }
 
         // check permission
+        PendingIntent pi = getLocationPendingIntent(true);
         PackageManager pm = appContext.getPackageManager();
         boolean hasPermission = (PackageManager.PERMISSION_GRANTED ==
                 pm.checkPermission("android.permission.ACCESS_FINE_LOCATION", "st.runtracker"));
@@ -63,6 +71,13 @@ public class RunManager {
 
     public boolean isTrackingRun() {
         return getLocationPendingIntent(false) != null;
+    }
+
+
+    private void broadcastLocation(Location location) {
+        Intent boradcastIntent = new Intent(ACTION_LOCATION);
+        boradcastIntent.putExtra(LocationManager.KEY_LOCATION_CHANGED, location);
+        appContext.sendBroadcast(boradcastIntent);
     }
 
 }
