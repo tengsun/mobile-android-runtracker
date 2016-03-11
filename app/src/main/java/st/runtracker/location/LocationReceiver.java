@@ -31,7 +31,7 @@ public class LocationReceiver extends BroadcastReceiver {
     }
 
     private void onLocationReceived(Context context, Location loc) {
-        Log.d(TAG, this + " Got location from " + loc.getProvider() + ": "
+        Log.d(TAG, "Got location from " + loc.getProvider() + ": "
             + loc.getLatitude() + ", " + loc.getLongitude());
     }
 
