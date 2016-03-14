@@ -107,11 +107,15 @@ public class RunManager {
         prefs.edit().remove(PREF_CURR_RUN_ID).commit();
     }
 
-    private Run insertRun() {
+    public Run insertRun() {
         Run run = new Run();
         run.setId(dbHelper.insertRun(run));
         Log.d(TAG, "Insert new run: " + run.getId());
         return run;
+    }
+
+    public RunDatabaseHelper.RunCursor queryRuns() {
+        return dbHelper.queryRuns();
     }
 
     // database location table operation
