@@ -7,10 +7,20 @@ import java.util.Date;
  */
 public class Run {
 
+    private long id;
     private Date startDate;
 
     public Run() {
+        id = -1;
         startDate = new Date();
+    }
+
+    public long getId() {
+        return id;
+    }
+
+    public void setId(long id) {
+        this.id = id;
     }
 
     public Date getStartDate() {

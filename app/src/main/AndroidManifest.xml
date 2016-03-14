@@ -18,7 +18,7 @@
             </intent-filter>
         </activity>
 
-        <receiver android:name=".location.LocationReceiver" android:exported="false">
+        <receiver android:name=".location.TrackingLocationReceiver" android:exported="false">
             <intent-filter>
                 <action android:name="st.runtracker.ACTION_LOCATION" />
             </intent-filter>
