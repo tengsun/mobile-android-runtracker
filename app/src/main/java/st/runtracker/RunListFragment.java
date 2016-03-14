@@ -12,6 +12,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CursorAdapter;
+import android.widget.ListView;
 import android.widget.TextView;
 
 import st.runtracker.database.RunDatabaseHelper;
@@ -49,12 +50,19 @@ public class RunListFragment extends ListFragment {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch(item.getItemId()) {
             case R.id.tracker_menu_new_run:
-                Intent i = new Intent(getActivity(), RunActivity.class);
-                startActivityForResult(i, REQUEST_NEW_RUN);
+                Intent intent = new Intent(getActivity(), RunActivity.class);
+                startActivityForResult(intent, REQUEST_NEW_RUN);
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
+    }
+
+    @Override
+    public void onListItemClick(ListView l, View v, int position, long id) {
+        Intent intent = new Intent(getActivity(), RunActivity.class);
+        intent.putExtra(RunActivity.EXTRA_RUN_ID, id);
+        startActivity(intent);
     }
 
     @Override

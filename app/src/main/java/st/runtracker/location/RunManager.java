@@ -85,6 +85,10 @@ public class RunManager {
         return getLocationPendingIntent(false) != null;
     }
 
+    public boolean isTrackingRun(Run run) {
+        return run != null && run.getId() == currRunId;
+    }
+
     private void broadcastLocation(Location location) {
         Intent boradcastIntent = new Intent(ACTION_LOCATION);
         boradcastIntent.putExtra(LocationManager.KEY_LOCATION_CHANGED, location);
@@ -99,6 +103,15 @@ public class RunManager {
         prefs.edit().putLong(PREF_CURR_RUN_ID, currRunId).commit();
         startLocationUpdates();
         return run;
+    }
+
+    public void startTrackingRun(Run run) {
+        // keep the ID
+        currRunId = run.getId();
+        // store it in shared preferences
+        prefs.edit().putLong(PREF_CURR_RUN_ID, currRunId).commit();
+        // start location updates
+        startLocationUpdates();
     }
 
     public void stopRun() {
@@ -118,6 +131,18 @@ public class RunManager {
         return dbHelper.queryRuns();
     }
 
+    public Run getRun(long id) {
+        Run run = null;
+        RunDatabaseHelper.RunCursor cursor = dbHelper.queryRun(id);
+        cursor.moveToFirst();
+
+        if (!cursor.isAfterLast()) {
+            run = cursor.getRun();
+        }
+        cursor.close();
+        return run;
+    }
+
     // database location table operation
 
     public void insertLocation(Location loc) {
@@ -127,6 +152,18 @@ public class RunManager {
         } else {
             Log.e(TAG, "Location received but no tracking run.");
         }
+    }
+
+    public Location getLastLocationForRun(long runId) {
+        Location loc = null;
+        RunDatabaseHelper.LocationCursor cursor = dbHelper.queryLastLocationForRun(runId);
+        cursor.moveToFirst();
+
+        if (!cursor.isAfterLast()) {
+            loc = cursor.getLocation();
+        }
+        cursor.close();
+        return loc;
     }
 
 }

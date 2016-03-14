@@ -77,6 +77,30 @@ public class RunDatabaseHelper extends SQLiteOpenHelper {
         return new RunCursor(cursor);
     }
 
+    public RunCursor queryRun(long id) {
+        Cursor cursor = getReadableDatabase().query(TABLE_RUN,
+                null, // all columns
+                COLUMN_RUN_ID + " = ?", // look for a run id
+                new String[]{String.valueOf(id)}, // with this value
+                null, // group by
+                null, // having
+                null, // order by
+                "1"); // limit 1 row
+        return new RunCursor(cursor);
+    }
+
+    public LocationCursor queryLastLocationForRun(long runId) {
+        Cursor cursor = getReadableDatabase().query(TABLE_LOCATION,
+                null, // all columns
+                COLUMN_LOCATION_RUN_ID + " = ?", // look for a run id
+                new String[]{String.valueOf(runId)}, // with this value
+                null, // group by
+                null, // having
+                COLUMN_LOCATION_RUN_TIME + " desc", // order by
+                "1"); // limit 1 row
+        return new LocationCursor(cursor);
+    }
+
     public static class RunCursor extends CursorWrapper {
         public RunCursor(Cursor cursor) {
             super(cursor);
@@ -93,6 +117,26 @@ public class RunDatabaseHelper extends SQLiteOpenHelper {
             run.setId(runId);
             run.setStartDate(new Date(startDate));
             return run;
+        }
+    }
+
+    public static class LocationCursor extends CursorWrapper {
+        public LocationCursor(Cursor cursor) {
+            super(cursor);
+        }
+
+        public Location getLocation() {
+            if (isBeforeFirst() || isAfterLast()) {
+                return null;
+            }
+
+            String provider = getString(getColumnIndex(COLUMN_LOCATION_PROVIDER));
+            Location loc = new Location(provider);
+            loc.setLatitude(getDouble(getColumnIndex(COLUMN_LOCATION_LAT)));
+            loc.setLongitude(getDouble(getColumnIndex(COLUMN_LOCATION_LNG)));
+            loc.setAltitude(getDouble(getColumnIndex(COLUMN_LOCATION_ALT)));
+            loc.setTime(getLong(getColumnIndex(COLUMN_LOCATION_RUN_TIME)));
+            return loc;
         }
     }
 
