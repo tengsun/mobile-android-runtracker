@@ -17,6 +17,9 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.baidu.mapapi.SDKInitializer;
+import com.baidu.mapapi.map.MapView;
+
 import st.runtracker.database.LastLocationLoader;
 import st.runtracker.database.LocationListCursorLoader;
 import st.runtracker.database.RunDatabaseHelper;
@@ -43,6 +46,7 @@ public class RunFragment extends Fragment {
 
     private Button startButton, stopButton;
     private TextView startedTextView, latTextView, lngTextView, altTextView, durationTextView;
+    private MapView mapView;
 
     // location receiver
     private BroadcastReceiver locationReceiver = new LocationReceiver() {
@@ -78,6 +82,9 @@ public class RunFragment extends Fragment {
         super.onCreate(savedInstanceState);
         setRetainInstance(true);
 
+        // init baidu map
+        SDKInitializer.initialize(getActivity().getApplicationContext());
+
         // init run manager
         runManager = RunManager.getRunManager(getActivity());
 
@@ -106,6 +113,7 @@ public class RunFragment extends Fragment {
         durationTextView = (TextView) view.findViewById(R.id.tracker_elapsed_time_text);
         startButton = (Button) view.findViewById(R.id.tracker_start_button);
         stopButton = (Button) view.findViewById(R.id.tracker_stop_button);
+        mapView = (MapView) view.findViewById(R.id.tracker_map_view);
 
         // bind events
         startButton.setOnClickListener(new View.OnClickListener() {
