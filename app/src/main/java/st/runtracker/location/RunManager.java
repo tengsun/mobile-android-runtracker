@@ -166,4 +166,8 @@ public class RunManager {
         return loc;
     }
 
+    public RunDatabaseHelper.LocationCursor queryLocationsForRun(long runId) {
+        return dbHelper.queryLocationsForRun(runId);
+    }
+
 }

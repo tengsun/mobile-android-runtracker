@@ -3,11 +3,13 @@ package st.runtracker;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.IntentFilter;
+import android.database.Cursor;
 import android.location.Location;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,6 +18,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import st.runtracker.database.LastLocationLoader;
+import st.runtracker.database.LocationListCursorLoader;
+import st.runtracker.database.RunDatabaseHelper;
 import st.runtracker.database.RunLoader;
 import st.runtracker.location.LocationReceiver;
 import st.runtracker.location.RunManager;
@@ -26,12 +30,16 @@ import st.runtracker.model.Run;
  */
 public class RunFragment extends Fragment {
 
+    private static final String TAG = "RunFragment";
+
     private RunManager runManager;
     private Run run;
     private Location lastLocation;
+    private RunDatabaseHelper.LocationCursor locationCursor;
     private static final String ARG_RUN_ID = "RUN_ID";
     private static final int LOAD_RUN = 0;
     private static final int LOAD_LOCATION = 1;
+    private static final int LOAD_LOCATIONS = 2;
 
     private Button startButton, stopButton;
     private TextView startedTextView, latTextView, lngTextView, altTextView, durationTextView;
@@ -80,7 +88,8 @@ public class RunFragment extends Fragment {
             if (runId != -1) {
                 LoaderManager lm = getLoaderManager();
                 lm.initLoader(LOAD_RUN, args, new RunLoaderCallbacks());
-                lm.initLoader(LOAD_LOCATION, args, new LocationLoaderCallbacks());
+                lm.initLoader(LOAD_LOCATION, args, new LastLocationLoaderCallbacks());
+                lm.initLoader(LOAD_LOCATIONS, args, new LocationListLoaderCallbacks());
             }
         }
     }
@@ -143,6 +152,24 @@ public class RunFragment extends Fragment {
         stopButton.setEnabled(started && trackingThisRun);
     }
 
+    private void updateMap() {
+        // TODO: add locations to the map
+        // iterate over the locations
+        locationCursor.moveToFirst();
+        while (!locationCursor.isAfterLast()) {
+            Location loc = locationCursor.getLocation();
+
+            if (locationCursor.isFirst()) {
+
+            } else if (locationCursor.isLast()) {
+
+            }
+
+            // Log.d(TAG, loc.getTime() + ": " + loc.getLatitude() + ", " + loc.getLongitude());
+            locationCursor.moveToNext();
+        }
+    }
+
     @Override
     public void onStart() {
         super.onStart();
@@ -177,9 +204,9 @@ public class RunFragment extends Fragment {
         }
     }
 
-    // location data loader callback
+    // last location data loader callback
 
-    private class LocationLoaderCallbacks implements LoaderManager.LoaderCallbacks<Location> {
+    private class LastLocationLoaderCallbacks implements LoaderManager.LoaderCallbacks<Location> {
 
         @Override
         public Loader<Location> onCreateLoader(int id, Bundle args) {
@@ -195,6 +222,29 @@ public class RunFragment extends Fragment {
         @Override
         public void onLoaderReset(Loader<Location> loader) {
             // do nothing
+        }
+    }
+
+    // location list data loader callback
+
+    private class LocationListLoaderCallbacks implements LoaderManager.LoaderCallbacks<Cursor> {
+
+        @Override
+        public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+            return new LocationListCursorLoader(getActivity(), args.getLong(ARG_RUN_ID));
+        }
+
+        @Override
+        public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+            locationCursor = (RunDatabaseHelper.LocationCursor) data;
+            updateMap();
+        }
+
+        @Override
+        public void onLoaderReset(Loader<Cursor> loader) {
+            // stop using the data
+            locationCursor.close();
+            locationCursor = null;
         }
     }
 
