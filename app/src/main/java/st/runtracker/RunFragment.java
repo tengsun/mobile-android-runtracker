@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.IntentFilter;
 import android.database.Cursor;
+import android.graphics.Color;
 import android.location.Location;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -18,7 +19,17 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.baidu.mapapi.SDKInitializer;
+import com.baidu.mapapi.map.BaiduMap;
+import com.baidu.mapapi.map.BitmapDescriptor;
+import com.baidu.mapapi.map.BitmapDescriptorFactory;
 import com.baidu.mapapi.map.MapView;
+import com.baidu.mapapi.map.MarkerOptions;
+import com.baidu.mapapi.map.OverlayOptions;
+import com.baidu.mapapi.map.PolylineOptions;
+import com.baidu.mapapi.model.LatLng;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import st.runtracker.database.LastLocationLoader;
 import st.runtracker.database.LocationListCursorLoader;
@@ -161,20 +172,41 @@ public class RunFragment extends Fragment {
     }
 
     private void updateMap() {
-        // TODO: add locations to the map
+        BaiduMap map = mapView.getMap();
+
         // iterate over the locations
         locationCursor.moveToFirst();
+
+        // define the polyline
+        List<LatLng> points = new ArrayList<LatLng>();
         while (!locationCursor.isAfterLast()) {
             Location loc = locationCursor.getLocation();
+            LatLng point = new LatLng(loc.getLatitude(), loc.getLongitude());
+            points.add(point);
 
+            // check start/end point
+            int resourceId = 0;
             if (locationCursor.isFirst()) {
-
+                resourceId = R.drawable.start;
             } else if (locationCursor.isLast()) {
-
+                resourceId = R.drawable.end;
+            } else {
+                resourceId = R.drawable.dot;
             }
+
+            // add overlay to the map
+            BitmapDescriptor bitmap = BitmapDescriptorFactory.fromResource(resourceId);
+            OverlayOptions marker = new MarkerOptions().position(point).icon(bitmap);
+            map.addOverlay(marker);
 
             // Log.d(TAG, loc.getTime() + ": " + loc.getLatitude() + ", " + loc.getLongitude());
             locationCursor.moveToNext();
+        }
+
+        // add polyline to the map
+        if (points.size() > 1) {
+            OverlayOptions polyline = new PolylineOptions().points(points).color(Color.BLUE);
+            map.addOverlay(polyline);
         }
     }
 
@@ -186,9 +218,27 @@ public class RunFragment extends Fragment {
     }
 
     @Override
+    public void onResume() {
+        super.onResume();
+        mapView.onResume();
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        mapView.onPause();
+    }
+
+    @Override
     public void onStop() {
         getActivity().unregisterReceiver(locationReceiver);
         super.onStop();
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        mapView.onDestroy();
     }
 
     // run data loader callback
