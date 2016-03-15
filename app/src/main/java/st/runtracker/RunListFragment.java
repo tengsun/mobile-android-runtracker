@@ -5,6 +5,8 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.support.v4.app.ListFragment;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.Loader;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -16,15 +18,15 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import st.runtracker.database.RunDatabaseHelper;
+import st.runtracker.database.SQLiteCursorLoader;
 import st.runtracker.location.RunManager;
 import st.runtracker.model.Run;
 
 /**
  * Created by tengsun on 3/14/16.
  */
-public class RunListFragment extends ListFragment {
+public class RunListFragment extends ListFragment implements LoaderManager.LoaderCallbacks<Cursor> {
 
-    private RunDatabaseHelper.RunCursor cursor;
     private static final int REQUEST_NEW_RUN = 0;
 
     @Override
@@ -32,12 +34,8 @@ public class RunListFragment extends ListFragment {
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
 
-        // query the run list from database
-        cursor = RunManager.getRunManager(getActivity()).queryRuns();
-
-        // create an adapter to point at this cursor
-        RunCursorAdapter adapter = new RunCursorAdapter(getActivity(), cursor);
-        setListAdapter(adapter);
+        // init the loader to load run list
+        getLoaderManager().initLoader(0, null, this);
     }
 
     @Override
@@ -48,7 +46,7 @@ public class RunListFragment extends ListFragment {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch(item.getItemId()) {
+        switch (item.getItemId()) {
             case R.id.tracker_menu_new_run:
                 Intent intent = new Intent(getActivity(), RunActivity.class);
                 startActivityForResult(intent, REQUEST_NEW_RUN);
@@ -68,15 +66,9 @@ public class RunListFragment extends ListFragment {
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (REQUEST_NEW_RUN == requestCode) {
-            cursor.requery();
-            ((RunCursorAdapter) getListAdapter()).notifyDataSetChanged();
+            // restart the loader to get new run if available
+            getLoaderManager().restartLoader(0, null, this);
         }
-    }
-
-    @Override
-    public void onDestroy() {
-        cursor.close();
-        super.onDestroy();
     }
 
     private static class RunCursorAdapter extends CursorAdapter {
@@ -103,5 +95,35 @@ public class RunListFragment extends ListFragment {
             String cellText = context.getString(R.string.tracker_cell_text, run.getStartDate());
             startDate.setText(cellText);
         }
+    }
+
+    // run list cursor loader implementation
+
+    private static class RunListCursorLoader extends SQLiteCursorLoader {
+        public RunListCursorLoader(Context context) {
+            super(context);
+        }
+
+        @Override
+        protected Cursor loadCursor() {
+            return RunManager.getRunManager(getContext()).queryRuns();
+        }
+    }
+
+    @Override
+    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+        return new RunListCursorLoader(getActivity());
+    }
+
+    @Override
+    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+        RunCursorAdapter adapter =
+                new RunCursorAdapter(getActivity(), (RunDatabaseHelper.RunCursor) data);
+        setListAdapter(adapter);
+    }
+
+    @Override
+    public void onLoaderReset(Loader<Cursor> loader) {
+        setListAdapter(null);
     }
 }
