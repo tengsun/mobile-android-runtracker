@@ -7,12 +7,15 @@ import android.os.Bundle;
 import android.support.v4.app.ListFragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
+import android.util.Log;
+import android.view.ContextMenu;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.CursorAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -21,6 +24,7 @@ import st.runtracker.database.RunDatabaseHelper;
 import st.runtracker.database.SQLiteCursorLoader;
 import st.runtracker.location.RunManager;
 import st.runtracker.model.Run;
+import st.runtracker.util.TimeUtil;
 
 /**
  * Created by tengsun on 3/14/16.
@@ -39,6 +43,15 @@ public class RunListFragment extends ListFragment implements LoaderManager.Loade
     }
 
     @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        View view = super.onCreateView(inflater, container, savedInstanceState);
+
+        ListView listView = (ListView) view.findViewById(android.R.id.list);
+        registerForContextMenu(listView);
+        return view;
+    }
+
+    @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         super.onCreateOptionsMenu(menu, inflater);
         inflater.inflate(R.menu.run_list_options, menu);
@@ -53,6 +66,34 @@ public class RunListFragment extends ListFragment implements LoaderManager.Loade
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
+        }
+    }
+
+    @Override
+    public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
+        super.onCreateContextMenu(menu, v, menuInfo);
+        getActivity().getMenuInflater().inflate(R.menu.run_list_context, menu);
+    }
+
+    @Override
+    public boolean onContextItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.tracker_menu_delete:
+                // get menu info
+                AdapterView.AdapterContextMenuInfo menuInfo =
+                        (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
+                RunDatabaseHelper.RunCursor runCursor =
+                        (RunDatabaseHelper.RunCursor) getListAdapter().getItem(menuInfo.position);
+
+                // delete run object
+                Run run = runCursor.getRun();
+                RunManager.getRunManager(getContext()).deleteRunAndLocations(run.getId());
+
+                // reload data on view
+                getLoaderManager().restartLoader(0, null, this);
+                return true;
+            default:
+                return super.onContextItemSelected(item);
         }
     }
 
@@ -92,7 +133,8 @@ public class RunListFragment extends ListFragment implements LoaderManager.Loade
 
             // get text view and format message
             TextView startDate = (TextView) view;
-            String cellText = context.getString(R.string.tracker_cell_text, run.getStartDate());
+            String cellText = context.getString(R.string.tracker_cell_text,
+                    run.getId(), TimeUtil.getDisplayDatetime(run.getStartDate()));
             startDate.setText(cellText);
         }
     }

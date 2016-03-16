@@ -54,6 +54,8 @@ public class RunDatabaseHelper extends SQLiteOpenHelper {
         // implement schema changes and data message when upgrading
     }
 
+    // insert, query and delete
+
     public long insertRun(Run run) {
         ContentValues cv = new ContentValues();
         cv.put(COLUMN_RUN_START_DATE, run.getStartDate().getTime());
@@ -110,6 +112,18 @@ public class RunDatabaseHelper extends SQLiteOpenHelper {
                 null, // having
                 COLUMN_LOCATION_RUN_TIME + " asc"); // order by
         return new LocationCursor(cursor);
+    }
+
+    public void deleteRun(long id) {
+        getWritableDatabase().delete(TABLE_RUN,
+                COLUMN_RUN_ID + " = ?",
+                new String[] {String.valueOf(id)});
+    }
+
+    public void deleteLocations(long id) {
+        getWritableDatabase().delete(TABLE_LOCATION,
+                COLUMN_LOCATION_RUN_ID + " = ?",
+                new String[] {String.valueOf(id)});
     }
 
     // run and location cursor wrapper

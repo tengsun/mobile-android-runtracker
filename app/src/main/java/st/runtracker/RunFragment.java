@@ -38,6 +38,7 @@ import st.runtracker.database.RunLoader;
 import st.runtracker.location.LocationReceiver;
 import st.runtracker.location.RunManager;
 import st.runtracker.model.Run;
+import st.runtracker.util.TimeUtil;
 
 /**
  * Created by tengsun on 3/10/16.
@@ -155,7 +156,7 @@ public class RunFragment extends Fragment {
         boolean trackingThisRun = runManager.isTrackingRun(run);
 
         if (run != null) {
-            startedTextView.setText(run.getStartDate().toString());
+            startedTextView.setText(TimeUtil.getDisplayDatetime(run.getStartDate()));
         }
 
         int durationSeconds = 0;

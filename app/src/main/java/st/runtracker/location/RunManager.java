@@ -143,6 +143,11 @@ public class RunManager {
         return run;
     }
 
+    public void deleteRunAndLocations(long id) {
+        dbHelper.deleteLocations(id);
+        dbHelper.deleteRun(id);
+    }
+
     // database location table operation
 
     public void insertLocation(Location loc) {
