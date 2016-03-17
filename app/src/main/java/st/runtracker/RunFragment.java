@@ -22,6 +22,9 @@ import com.baidu.mapapi.SDKInitializer;
 import com.baidu.mapapi.map.BaiduMap;
 import com.baidu.mapapi.map.BitmapDescriptor;
 import com.baidu.mapapi.map.BitmapDescriptorFactory;
+import com.baidu.mapapi.map.MapStatus;
+import com.baidu.mapapi.map.MapStatusUpdate;
+import com.baidu.mapapi.map.MapStatusUpdateFactory;
 import com.baidu.mapapi.map.MapView;
 import com.baidu.mapapi.map.MarkerOptions;
 import com.baidu.mapapi.map.OverlayOptions;
@@ -72,6 +75,7 @@ public class RunFragment extends Fragment {
             lastLocation = loc;
             if (isVisible()) {
                 updateUI();
+                drawOnMap();
             }
         }
 
@@ -173,23 +177,42 @@ public class RunFragment extends Fragment {
         stopButton.setEnabled(started && trackingThisRun);
     }
 
+    private void drawOnMap() {
+        BaiduMap map = mapView.getMap();
+
+        // convert raw gsp data to baidu coordinate system
+        LatLng rawPoint = new LatLng(lastLocation.getLatitude(), lastLocation.getLongitude());
+        LatLng point = convertRawGPSToBaiduMap(rawPoint);
+
+        // add overlay to the map
+        int resourceId = R.drawable.dot;
+        BitmapDescriptor bitmap = BitmapDescriptorFactory.fromResource(resourceId);
+        OverlayOptions marker = new MarkerOptions().position(point).icon(bitmap);
+        map.addOverlay(marker);
+
+        // set map center location
+        MapStatus mapStatus = new MapStatus.Builder().target(point).zoom(16).build();
+        MapStatusUpdate mapStatusUpdate = MapStatusUpdateFactory.newMapStatus(mapStatus);
+        map.setMapStatus(mapStatusUpdate);
+    }
+
     private void updateMap() {
         BaiduMap map = mapView.getMap();
 
-        // iterate over the locations
+        // get start location
         locationCursor.moveToFirst();
+        Location startLoc = null;
+        if (!locationCursor.isAfterLast()) {
+            startLoc = locationCursor.getLocation();
+        }
 
         // define the polyline
         List<LatLng> points = new ArrayList<LatLng>();
         while (!locationCursor.isAfterLast()) {
+            // convert raw gsp data to baidu coordinate system
             Location loc = locationCursor.getLocation();
             LatLng rawPoint = new LatLng(loc.getLatitude(), loc.getLongitude());
-
-            // convert raw gsp data to baidu coordinate system
-            CoordinateConverter converter = new CoordinateConverter();
-            converter.from(CoordinateConverter.CoordType.GPS);
-            converter.coord(rawPoint);
-            LatLng point = converter.convert();
+            LatLng point = convertRawGPSToBaiduMap(rawPoint);
             points.add(point);
 
             // check start/end point
@@ -216,6 +239,23 @@ public class RunFragment extends Fragment {
             OverlayOptions polyline = new PolylineOptions().points(points).color(Color.BLUE);
             map.addOverlay(polyline);
         }
+
+        // set map center location
+        if (startLoc != null) {
+            LatLng startPoint = new LatLng(startLoc.getLatitude(), startLoc.getLongitude());
+            LatLng start = convertRawGPSToBaiduMap(startPoint);
+            MapStatus mapStatus = new MapStatus.Builder().target(start).zoom(12).build();
+            MapStatusUpdate mapStatusUpdate = MapStatusUpdateFactory.newMapStatus(mapStatus);
+            map.setMapStatus(mapStatusUpdate);
+        }
+    }
+
+    private LatLng convertRawGPSToBaiduMap(LatLng rawPoint) {
+        CoordinateConverter converter = new CoordinateConverter();
+        converter.from(CoordinateConverter.CoordType.GPS);
+        converter.coord(rawPoint);
+        LatLng point = converter.convert();
+        return point;
     }
 
     @Override
