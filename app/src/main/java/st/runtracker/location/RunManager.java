@@ -67,7 +67,7 @@ public class RunManager {
         boolean hasPermission = (PackageManager.PERMISSION_GRANTED ==
                 pm.checkPermission("android.permission.ACCESS_FINE_LOCATION", "st.runtracker"));
         if (hasPermission) {
-            locationManager.requestLocationUpdates(provider, 1000, 0, pi);
+            locationManager.requestLocationUpdates(provider, 5000, 0, pi);
         } else {
             Log.i(TAG, "Location access is denied!");
         }

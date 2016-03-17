@@ -27,6 +27,7 @@ import com.baidu.mapapi.map.MarkerOptions;
 import com.baidu.mapapi.map.OverlayOptions;
 import com.baidu.mapapi.map.PolylineOptions;
 import com.baidu.mapapi.model.LatLng;
+import com.baidu.mapapi.utils.CoordinateConverter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -182,7 +183,13 @@ public class RunFragment extends Fragment {
         List<LatLng> points = new ArrayList<LatLng>();
         while (!locationCursor.isAfterLast()) {
             Location loc = locationCursor.getLocation();
-            LatLng point = new LatLng(loc.getLatitude(), loc.getLongitude());
+            LatLng rawPoint = new LatLng(loc.getLatitude(), loc.getLongitude());
+
+            // convert raw gsp data to baidu coordinate system
+            CoordinateConverter converter = new CoordinateConverter();
+            converter.from(CoordinateConverter.CoordType.GPS);
+            converter.coord(rawPoint);
+            LatLng point = converter.convert();
             points.add(point);
 
             // check start/end point
